@@ -1,21 +1,3 @@
-/*
- *
- * Copyright (c) 2005-2013 Imperas Software Ltd., www.imperas.com
- *
- * The contents of this file are provided under the Software License
- * Agreement that you accepted before downloading this file.
- *
- * This source forms part of the Software and can be used for educational,
- * training, and demonstration purposes but cannot be used for derivative
- * works except in cases where the derivative works require OVP technology
- * to run.
- *
- * For open source models released under licenses that you can use for
- * derivative works, please visit www.OVPworld.org or www.imperas.com
- * for the location of the open source models.
- *
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,74 +6,116 @@
 #define NUM_VALUES 35
 
 static volatile int flag = 0;
-static volatile int fibres = 0;
-
-int fib(int i) {
-    return (i>1) ? fib(i-1) + fib(i-2) : i;
+static volatile int flag2 = 0;
+static volatile int fibResPar = 0;
+static volatile int fibResImpar = 0;
+int fib(int i)
+{
+    return (i > 1) ? fib(i - 1) + fib(i - 2) : i;
 }
 
-int munge(int mungeIn) {
-
-    int result = 0;
-    int i;
-
-    for(i=0; i<mungeIn; i++) {
-        result += i;
-    }
-    return result;
-}
-
-int writer(int id) {
+int par(int id)
+{
 
     int i;
 
-    for(i=0; i<NUM_VALUES; i++) {
+    for (i = 0; i < NUM_VALUES; i++)
+    {
+
         int result = fib(i);
-        while(flag) {}
+        while (flag) //flag == 1
+        {
+        }
         printf("CPU %d: fib(%d) = %d\n", id, i, result);
-        fibres = result;
-        flag = (i==(NUM_VALUES-1)) ? 2 : 1;
+        fibResPar = result;
+        flag = (i >= (NUM_VALUES - 1)) ? 2 : 1;
+        i++;
     }
 
-    while(flag) {}
+    while (flag)
+    {
+    }
 
     return 1;
 }
 
-int reader(int id) {
+int impar(int id)
+{
+
+    int j;
+
+    for (j = 1; j < NUM_VALUES; j++)
+    {
+
+        int result = fib(j);
+        while (flag2)
+        {
+        }
+        printf("CPU %d: fib(%d) = %d\n", id, j, result);
+        fibResImpar = result;
+        flag2 = (j >= (NUM_VALUES - 1)) ? 2 : 1;
+        j++;
+    }
+
+    while (flag2)
+    {
+    }
+
+    return 1;
+}
+
+int print(int id)
+{
 
     int done = 0;
+    do
+    {
+        while (!flag)
+        {
+            if (flag == 2 || flag2 == 2)
+                break;
+        }
+        printf("CPU %d: pritando 0 = %d\n", id, fibResPar);
+        flag = 0;
+        while (!flag2)
+        {
+            if (flag == 2 || flag2 == 2)
+                break;
+        }
+        printf("CPU %d: pritando 1 = %d\n", id, fibResImpar);
+        flag2 = 0;
 
-    do {
-        int mungeIn;
-        while(!flag) {}
-        mungeIn = fibres;
-        done    = (flag==2);
-        printf("CPU %d: munge(%d) = %d\n", id, mungeIn, munge(mungeIn));
-        flag    = 0;
-    } while(!done);
+        if (flag == 2 || flag2 == 2)
+            done = 1;
+    } while (!done);
 
     return 1;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 
     int id = impProcessorId();
 
-    printf("CPU %d starting...\n", id);
+    switch (id)
+    {
 
-    switch(id) {
+    case 0:
+        printf("CPU PRINT id=%d starting...\n", id);
+        print(id);
+        break;
 
-        case 0:
-            writer(id);
-            break;
+    case 1:
+        printf("CPU IMPAR id=%d starting...\n", id);
+        impar(id);
+        break;
 
-        case 1:
-            reader(id);
-            break;
-
-        case 2:
-            break;
+    case 2:
+        printf("CPU PAR id=%d starting...\n", id);
+        par(id);
+        break;
+    case 3:
+        break;
     }
 
     return 1;
