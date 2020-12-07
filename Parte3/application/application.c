@@ -11,7 +11,7 @@ static volatile int flag = 0;
 static volatile int flag2 = 0;
 static volatile int vetorCriado = 0;
 static volatile int flagPrint = 0;
-static volatile int flagCriar = 0;
+static volatile int done = 0;
 
 void mergeSort(int *vetor, int posicaoInicio, int posicaoFim)
 {
@@ -83,7 +83,7 @@ int cpu0(int id)
     }
 
     flagPrint++;  //Parte 1 pronta para printar
-    while (!flagCriar) //Espera o print acabar
+    while (!done) //Espera o print acabar
     {
     }
     printf("Acabou cpu0\n");
@@ -93,7 +93,7 @@ int cpu0(int id)
 
 int cpu1(int id)
 {
-    while (!vetorCriado) //Fica preso enquanto nao criou o vetor
+    while (!vetorCriado) //F ica preso enquanto nao criou o vetor
     {
     }
 
@@ -104,7 +104,7 @@ int cpu1(int id)
     {
     }
     flagPrint++; //Parte 2 pronta para printar
-    while (!flagCriar) //Espera o print acabar
+    while (!done) //Espera o print acabar
     {
     }
     printf("Acabou cpu1\n");
@@ -129,7 +129,7 @@ int criar(int id)
     }
     vetorCriado = 1;
 
-    while (!flagCriar)
+    while (!done)
     {
     }
 
@@ -155,7 +155,7 @@ int print(int id)
 
     printf("\nAcabou print\n");
     
-    flagCriar = 1;
+    done = 1;
 
     return 1;
 }
